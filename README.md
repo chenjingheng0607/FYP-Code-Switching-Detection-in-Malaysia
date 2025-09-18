@@ -46,7 +46,7 @@ This project requires Python 3.13+ and `uv` for package management.
 
 2.  Clone the repo:
     ```sh
-    git clone https://github.com/your_username/FYP-Code-Switching-Detection-in-Malaysia.git
+    git clone https://github.com/chenjingheng0607/FYP-Code-Switching-Detection-in-Malaysia.git
     cd FYP-Code-Switching-Detection-in-Malaysia
     ```
 3.  Create a virtual environment and install dependencies:
