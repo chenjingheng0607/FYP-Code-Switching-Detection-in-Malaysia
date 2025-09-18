@@ -59,7 +59,7 @@ This project requires Python 3.13+ and `uv` for package management.
 This project uses the Django web framework to provide an interface for the code-switching detection model.
 
 1.  **Run the development server:**
-    Navigate into the `WebApplication` directory (if you created it above) and run the server.
+    Navigate into the `WebApplication` directory and run the server.
     ```sh
     cd src
     python manage.py runserver
