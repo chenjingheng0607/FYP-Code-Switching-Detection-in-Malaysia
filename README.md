@@ -66,15 +66,3 @@ This project uses the Django web framework to provide an interface for the code-
     ```
 
 2.  Open your web browser and go to `http://127.0.0.1:8000` to see your application running.
-
-## Project Structure
-
-```
-fyp-code-switching-detection-in-malaysia/
-├── .venv/                   # Virtual environment
-├── WebApplication/          # Source code (if you move it here)
-├── main.py                  # Main entry point
-├── pyproject.toml           # Project metadata and dependencies
-├── uv.lock                  # Pinned versions of dependencies
-└── README.md                # This file
-```
