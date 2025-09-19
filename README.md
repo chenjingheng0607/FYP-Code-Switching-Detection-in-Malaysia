@@ -1,7 +1,7 @@
 # FYP-Code-Switching-Detection-in-Malaysia
 FYP project
 
-This repository contains the source code for a Final Year Project (FYP) on **Code-Switching Detection in Malaysian multilingual text**. The project aims to build a system that can identify instances of code-switching between languages commonly used in Malaysia, such as English, Malay, and others.
+This repository contains the source code for a Final Year Project (FYP) on **Code-Switching Detection in Malaysian multilingual text**. The project aims to build a system that can identify instances of code-switching between languages commonly used in Malaysia, such as English, Malay.
 
 ## Table of Contents
 
@@ -10,10 +10,6 @@ This repository contains the source code for a Final Year Project (FYP) on **Cod
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
 - [Usage](#usage)
-- [Project Structure](#project-structure)
-- [Contributing](#contributing)
-- [License](#license)
-- [Acknowledgments](#acknowledgments)
 
 ## About The Project
 
@@ -59,9 +55,7 @@ This project requires Python 3.13+ and `uv` for package management.
 This project uses the Django web framework to provide an interface for the code-switching detection model.
 
 1.  **Run the development server:**
-    Navigate into the `WebApplication` directory and run the server.
     ```sh
-    cd src
     python manage.py runserver
     ```
 
