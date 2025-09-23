@@ -21,13 +21,6 @@ This project uses Django, suggesting a web-based interface for demonstrating the
 
 To get a local copy up and running, follow these simple steps.
 
-### Prerequisites
-
-This project requires Python 3.13+ and `uv` for package management.
-
-*   Python (>=3.13)
-*   uv
-
 ### Installation
 1.  Install uv:
     Windows
