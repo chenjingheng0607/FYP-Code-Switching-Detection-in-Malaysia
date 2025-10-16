@@ -19,7 +19,6 @@ def initialize_session_state() -> None:
         st.session_state.ollama_models = []
     if "performance_metrics" not in st.session_state:
         st.session_state.performance_metrics = None
-    # Add state for controlling the performance panel's visibility
     if "show_performance_panel" not in st.session_state:
         st.session_state.show_performance_panel = True
 
@@ -47,7 +46,6 @@ def render_settings_sidebar() -> None:
         st.header("⚙️ Settings")
         st.write("Configure Ollama connection and model.")
         
-        # Add the checkbox to control the performance panel
         st.checkbox("Show Performance Panel", key="show_performance_panel")
         
         st.text_input(
@@ -83,7 +81,6 @@ def render_performance_sidebar() -> None:
         total_duration_ns = metrics.get('total_duration', 0)
         eval_count = metrics.get('eval_count', 0)
 
-        # Format Total Duration
         if total_duration_ns > 1e9:
             total_duration_s = total_duration_ns / 1e9
             st.metric(label="Total Duration", value=f"{total_duration_s:.2f} s")
@@ -91,7 +88,6 @@ def render_performance_sidebar() -> None:
             total_duration_ms = total_duration_ns / 1e6
             st.metric(label="Total Duration", value=f"{total_duration_ms:.2f} ms")
         
-        # Calculate and Format Tokens per Second
         if total_duration_ns > 0 and eval_count > 0:
             tokens_per_second = eval_count / (total_duration_ns / 1e9)
             st.metric(label="Tokens per Second", value=f"{tokens_per_second:.2f} t/s")
@@ -100,31 +96,16 @@ def render_performance_sidebar() -> None:
             
         st.metric(label="Tokens Evaluated", value=str(eval_count))
 
-        # Raw data expander
         with st.expander("Show Raw Metrics"):
             st.json(metrics)
     else:
         st.info("Performance metrics will be displayed here after the first message is sent.")
 
 
-def render_chat_history() -> None:
-    for message in st.session_state.chat_messages:
-        with st.chat_message(message["role"], avatar="🧑" if message["role"] == "user" else "🤖"):
-            st.markdown(message["content"])
-
-
-def append_message(role: str, content: str) -> None:
-    st.session_state.chat_messages.append({"role": role, "content": content})
-
-
 def call_ollama_chat(base_url: str, model: str, messages: List[Dict[str, str]], timeout_s: int = 120) -> Optional[Dict[str, Any]]:
     """Call Ollama's chat API and return the full response dictionary."""
     url = base_url.rstrip("/") + "/api/chat"
-    payload: Dict[str, Any] = {
-        "model": model,
-        "messages": messages,
-        "stream": False,
-    }
+    payload: Dict[str, Any] = { "model": model, "messages": messages, "stream": False }
     request = urllib.request.Request(
         url,
         data=json.dumps(payload).encode("utf-8"),
@@ -133,13 +114,9 @@ def call_ollama_chat(base_url: str, model: str, messages: List[Dict[str, str]], 
     )
     try:
         with urllib.request.urlopen(request, timeout=timeout_s) as response:
-            raw = response.read()
-            return json.loads(raw.decode("utf-8"))
+            return json.loads(response.read().decode("utf-8"))
     except urllib.error.HTTPError as http_err:
-        try:
-            detail = http_err.read().decode("utf-8")
-        except Exception:
-            detail = str(http_err)
+        detail = http_err.read().decode("utf-8", errors="ignore")
         raise RuntimeError(f"HTTP {http_err.code} from Ollama: {detail}") from http_err
     except urllib.error.URLError as url_err:
         raise RuntimeError(f"Failed to reach Ollama at {url}: {url_err}") from url_err
@@ -155,49 +132,52 @@ def main() -> None:
 
     render_settings_sidebar()
 
-    # --- Conditional Layout ---
-    # Check the state of the checkbox to decide the layout
+    # --- Layout Definition ---
     if st.session_state.show_performance_panel:
         main_col, performance_col = st.columns([2, 1])
         with performance_col:
             render_performance_sidebar()
     else:
-        main_col = st.container() # Use a container for the main content
+        main_col = st.container()
 
+    # --- Main Chat Interface ---
     with main_col:
-        render_chat_history()
-        user_prompt = st.chat_input("Type a message…")
+        # Display existing chat messages
+        for message in st.session_state.chat_messages:
+            with st.chat_message(message["role"], avatar="🧑" if message["role"] == "user" else "🤖"):
+                st.markdown(message["content"])
 
-    if user_prompt is not None:
-        user_text = user_prompt.strip()
-        if user_text:
-            append_message("user", user_text)
-            with main_col:
-                with st.chat_message("assistant", avatar="🤖"):
-                    with st.spinner("Thinking…"):
-                        try:
-                            history = [
-                                {"role": m["role"], "content": m["content"]}
-                                for m in st.session_state.chat_messages
-                            ]
-                            base_url = st.session_state.get("ollama_base_url", DEFAULT_OLLAMA_BASE_URL)
-                            model = st.session_state.get("ollama_model")
-                            
-                            if model:
-                                full_response = call_ollama_chat(base_url, model, history)
-                                if full_response:
-                                    bot_reply = full_response.get("message", {}).get("content", "")
-                                    st.session_state.performance_metrics = {k: v for k, v in full_response.items() if k != 'message'}
-                                    
-                                    st.markdown(bot_reply)
-                                    append_message("assistant", bot_reply)
-                                else:
-                                    st.error("Received an empty response from Ollama.")
-                            else:
-                                st.error("Please select a model from the settings sidebar.")
-                        except Exception as e:
-                            st.error(str(e))
-            st.rerun()
+        # Chat input is rendered last and docks to the bottom
+        if user_prompt := st.chat_input("Type a message…"):
+            # Append and display the user's message
+            st.session_state.chat_messages.append({"role": "user", "content": user_prompt})
+            with st.chat_message("user", avatar="🧑"):
+                st.markdown(user_prompt)
+
+            # Generate and display the assistant's response
+            with st.chat_message("assistant", avatar="🤖"):
+                with st.spinner("Thinking…"):
+                    try:
+                        base_url = st.session_state.get("ollama_base_url", DEFAULT_OLLAMA_BASE_URL)
+                        model = st.session_state.get("ollama_model")
+                        
+                        if not model:
+                            st.error("Please select a model from the settings sidebar.")
+                            st.stop()
+                        
+                        history = [{"role": m["role"], "content": m["content"]} for m in st.session_state.chat_messages]
+                        full_response = call_ollama_chat(base_url, model, history)
+                        
+                        if full_response:
+                            bot_reply = full_response.get("message", {}).get("content", "")
+                            st.session_state.performance_metrics = {k: v for k, v in full_response.items() if k != 'message'}
+                            st.session_state.chat_messages.append({"role": "assistant", "content": bot_reply})
+                            st.rerun() # Rerun to update performance panel and keep a clean script flow
+                        else:
+                            st.error("Received an empty response from Ollama.")
+
+                    except Exception as e:
+                        st.error(f"An error occurred: {e}")
 
 
 if __name__ == "__main__":
