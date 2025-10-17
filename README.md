@@ -52,6 +52,4 @@ This project uses Streamlit to provide an interface for the code-switching detec
     uv run streamlit run chat_app.py
     ```
 
-    If your main Streamlit file has a different name or path, replace `chat_app.py` accordingly (for example: `uv run streamlit run src/ui/main.py`).
-
 2.  Open your web browser and go to `http://localhost:8501` to see the application running.

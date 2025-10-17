@@ -8,8 +8,7 @@ import streamlit as st
 
 # --- Configuration ---
 # Set the default URL for the Ollama API here.
-DEFAULT_OLLAMA_BASE_URL = "http://192.168.144.1:11434/"
-
+DEFAULT_OLLAMA_BASE_URL = "http://192.168.144.1:11434"
 
 def initialize_session_state() -> None:
     """Ensure session state variables exist."""
