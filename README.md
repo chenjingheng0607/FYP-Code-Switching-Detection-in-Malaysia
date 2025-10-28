@@ -38,7 +38,10 @@ To get a local copy up and running, follow these simple steps.
     git clone https://github.com/chenjingheng0607/FYP-Code-Switching-Detection-in-Malaysia.git
     cd FYP-Code-Switching-Detection-in-Malaysia
     ```
-3.  Create a virtual environment and install dependencies:
+
+3.  Create a folder called "dataset" and download all the dataset from the file "datasetLink.txt". Place the dataset into the folder.
+
+4.  Create a virtual environment and install dependencies:
     ```sh
     uv sync
     ```
