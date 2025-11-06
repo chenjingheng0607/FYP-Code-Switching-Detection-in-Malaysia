@@ -59,8 +59,8 @@ if __name__ == "__main__":
     
     # --- 1. Load Dictionaries ---
     print("--- Loading Dictionaries ---")
-    english_words = load_word_list('dataset/english_words.txt')
-    malay_words = load_word_list('dataset/malay_words.txt')
+    english_words = load_word_list('dataset/words_alpha.txt')
+    malay_words = load_word_list('dataset/Malays.dic.txt')
     
     if not english_words or not malay_words:
         print("\n❌ Could not load one or more dictionaries. Exiting.")
