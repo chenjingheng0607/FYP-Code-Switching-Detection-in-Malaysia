@@ -5,8 +5,14 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "accelerate>=1.11.0",
+    "datasets>=4.4.1",
+    "evaluate>=0.4.6",
+    "fasttext>=0.9.3",
     "ijson>=3.4.0.post0",
     "ipykernel>=7.1.0",
+    "malaya>=5.1.1",
+    "seqeval>=1.2.2",
     "streamlit>=1.50.0",
     "torch>=2.9.0",
 ]

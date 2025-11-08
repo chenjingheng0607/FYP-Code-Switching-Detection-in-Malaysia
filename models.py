@@ -2,6 +2,7 @@
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 
 MODEL_PATHS = {
+    "Trained Model": "model/malay-english-codeswitch-model/checkpoint-528",
     "mBERT": "your_mbbert_model_path_here",
     "XLM-R": "your_xlmr_model_path_here",
     "mT5": "your_mt5_model_path_here",
