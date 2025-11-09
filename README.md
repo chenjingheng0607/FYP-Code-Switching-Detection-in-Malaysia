@@ -62,7 +62,7 @@ This project uses Streamlit to provide an interface for the code-switching detec
 
 1.  **Run the Streamlit app:**
     ```sh
-    uv run streamlit run chat_app.py
+    uv run streamlit run app.py
     ```
 
 2.  Open your web browser and go to `http://localhost:8501` to see the application running.
