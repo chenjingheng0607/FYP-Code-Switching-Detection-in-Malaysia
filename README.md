@@ -39,12 +39,22 @@ To get a local copy up and running, follow these simple steps.
     cd FYP-Code-Switching-Detection-in-Malaysia
     ```
 
-3.  Create a folder called "dataset" and download all the dataset from the file "datasetLink.txt". Place the dataset into the folder.
-
-4.  Create a virtual environment and install dependencies:
+3.  Create a virtual environment and install dependencies:
     ```sh
     uv sync
     ```
+
+### Getting the dataset
+1. Create a folder name it "dataset" in the root folder
+
+2. Download all the dataset from the file "datasetLink.txt". Place the "dataset" into the folder.
+
+3. Run the python file in the "data_preprocessing" folder with this sequence to get the dataset:
+- create_full_raw_dataset.py
+- clean_dataset.py
+- generate_with_malaya.py
+
+4. The final dataset will be in the "dataset" folder called "finetuning_dataset_malaya.jsonl"
 
 ## Usage
 
