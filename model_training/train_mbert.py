@@ -10,9 +10,9 @@ import evaluate
 
 # --- File Paths ---
 # The dataset we created in the previous step
-DATASET_FILE = 'dataset/finetuning_dataset_malaya.jsonl'
+DATASET_FILE = 'dataset/finetuning_dataset_malaya_500k.jsonl'
 # Where the final trained model will be saved
-OUTPUT_DIR = "model/malay-english-codeswitch-model"
+OUTPUT_DIR = "model/malay-english-codeswitch-model-mbert_500k"
 
 # --- Model Configuration ---
 # You can choose other models like 'xlm-roberta-base' as well
@@ -121,8 +121,8 @@ model = AutoModelForTokenClassification.from_pretrained(
 training_args = TrainingArguments(
     output_dir=OUTPUT_DIR,
     learning_rate=2e-5,
-    per_device_train_batch_size=16,
-    per_device_eval_batch_size=16,
+    per_device_train_batch_size=10,
+    per_device_eval_batch_size=10,
     num_train_epochs=1,  # Start with 1 epoch for a fast baseline
     weight_decay=0.01,
     eval_strategy="epoch",

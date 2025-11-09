@@ -61,8 +61,8 @@ def create_labeled_example(sentence, eng_words, ms_words, lang_model, tokenizer,
 # --- Main script execution ---
 if __name__ == "__main__":
     
-    input_file = 'dataset/cleaned_dataset.txt'
-    output_file = 'dataset/finetuning_dataset_malaya.jsonl'
+    input_file = 'dataset/cleaned_dataset_500k.txt'
+    output_file = 'dataset/finetuning_dataset_malaya_500k.jsonl'
     
     LABEL_MAP = {
         'O': 0, 'B-MS': 1, 'I-MS': 2, 'B-EN': 3, 'I-EN': 4
@@ -71,7 +71,7 @@ if __name__ == "__main__":
     print("--- 1. Loading Dictionaries ---")
     # Corrected the filenames to match your output
     english_words = load_word_list('dataset/words_alpha.txt')
-    malay_words = load_word_list('dataset/Malays.dic.txt')
+    malay_words = load_word_list('dataset/malay-text.txt')
     if not english_words or not malay_words:
         exit()
         

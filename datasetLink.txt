@@ -4,4 +4,4 @@ https://f000.backblazeb2.com/file/malay-dataset/sentiment/semisupervised/test-se
 
 Download the dictionary from github:
 https://github.com/dwyl/english-words/blob/master/words_alpha.txt
-https://github.com/mesolitica/malaysian-dataset/blob/master/dictionary/Malays.dic.txt
+https://github.com/mesolitica/malaysian-dataset/blob/master/dictionary/malay-text.txthttps://github.com/mesolitica/malaysian-dataset/blob/master/dictionary/Malays.dic.txt

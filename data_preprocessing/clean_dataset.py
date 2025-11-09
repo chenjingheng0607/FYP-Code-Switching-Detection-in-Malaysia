@@ -49,8 +49,8 @@ def final_clean_text(text):
 # --- Main script execution ---
 if __name__ == "__main__":
     
-    input_file = 'dataset/full_raw_sentences.txt'
-    output_file = 'dataset/cleaned_dataset.txt'
+    input_file = 'dataset/raw_sample_500k.txt'
+    output_file = 'dataset/cleaned_dataset_500k.txt'
     
     if not os.path.exists(input_file):
         print(f"❌ ERROR: Input file '{input_file}' not found.")
