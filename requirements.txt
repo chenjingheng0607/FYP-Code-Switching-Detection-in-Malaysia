@@ -1,6 +1,0 @@
-streamlit
-torch
-transformers
-sentencepiece
-sqlite3-binary
-langdetect
