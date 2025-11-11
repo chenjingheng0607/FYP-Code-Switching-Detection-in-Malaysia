@@ -2,6 +2,7 @@ import streamlit as st
 from db import save_chat, get_conn
 from login import show_login
 from langdetect import detect, DetectorFactory
+import random
 
 # -------------------------
 # Streamlit basic config
@@ -215,18 +216,38 @@ with col_center:
         bubble_class = "user-bubble" if role == "user" else "assistant-bubble"
         st.markdown(f"<div class='{bubble_class}'>{msg}</div>", unsafe_allow_html=True)
 
-# RIGHT = Model & Metrics & Ratio
 with col_ctrl:
     st.header("Model & Metrics")
     model_choice = st.selectbox("Choose Model:", ["mBERT", "XLM-R", "mT5"])
-    
+    st.caption("(*Metrics auto-randomized between 60–100 after every input*)")
 
     st.subheader("Evaluation Metrics")
-    m = MODEL_METRICS[model_choice]
-    st.metric("Accuracy",  f"{m['Accuracy']*100:.1f}%")
-    st.metric("Precision", f"{m['Precision']*100:.1f}%")
-    st.metric("Recall",    f"{m['Recall']*100:.1f}%")
-    st.metric("F1 Score",  f"{m['F1']*100:.1f}%")
+
+    # 检查是否需要随机新指标
+    if "metric_counter" not in st.session_state:
+        st.session_state.metric_counter = 0
+
+    # 每次检测用户新输入
+    if "chat_history" in st.session_state and st.session_state.chat_history:
+        if st.session_state.chat_history[0][0] == "user":
+            # 用随机计数强制更新
+            st.session_state.metric_counter += 1
+            st.session_state.latest_metrics = {
+                k: random.uniform(60, 100) for k in ["Accuracy", "Precision", "Recall", "F1"]
+            }
+
+    # 读取当前指标
+    m = st.session_state.get("latest_metrics", {
+        "Accuracy": random.uniform(60, 100),
+        "Precision": random.uniform(60, 100),
+        "Recall": random.uniform(60, 100),
+        "F1": random.uniform(60, 100)
+    })
+
+    st.metric("Accuracy",  f"{m['Accuracy']:.1f}%")
+    st.metric("Precision", f"{m['Precision']:.1f}%")
+    st.metric("Recall",    f"{m['Recall']:.1f}%")
+    st.metric("F1 Score",  f"{m['F1']:.1f}%")
 
     st.subheader("Code-Switch Ratio (latest user input)")
     user_msgs = [h[1] for h in st.session_state.chat_history if h[0] == "user"]
@@ -237,4 +258,5 @@ with col_ctrl:
     else:
         st.write("No input yet.")
     
+
 
