@@ -3,7 +3,7 @@ import os
 
 def final_clean_text(text):
     """
-    A final, more aggressive cleaning function based on sample inspection.
+    Cleaning function based on sample inspection.
     """
     if not isinstance(text, str):
         return ""

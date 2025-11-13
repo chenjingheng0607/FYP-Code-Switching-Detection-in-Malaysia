@@ -65,7 +65,7 @@ if __name__ == "__main__":
     output_file = 'dataset/finetuning_dataset_malaya_500k.jsonl'
     
     LABEL_MAP = {
-        'O': 0, 'B-MS': 1, 'I-MS': 2, 'B-EN': 3, 'I-EN': 4
+        'O': 0, 'B-MS': 1, 'B-EN': 2
     }
     
     print("--- 1. Loading Dictionaries ---")
