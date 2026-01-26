@@ -61,8 +61,8 @@ def create_labeled_example(sentence, eng_words, ms_words, lang_model, tokenizer,
 # --- Main script execution ---
 if __name__ == "__main__":
     
-    input_file = 'dataset/cleaned_dataset_500k.txt'
-    output_file = 'dataset/finetuning_dataset_malaya_500k.jsonl'
+    input_file = 'dataset/cleaned_dataset_full.txt'
+    output_file = 'dataset/finetuning_dataset_malaya_full.jsonl'
     
     LABEL_MAP = {
         'O': 0, 'B-MS': 1, 'B-EN': 2

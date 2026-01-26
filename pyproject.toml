@@ -8,12 +8,25 @@ dependencies = [
     "accelerate>=1.11.0",
     "datasets>=4.4.1",
     "evaluate>=0.4.6",
-    "fasttext>=0.9.3",
+    "fasttext-wheel>=0.9.2",
     "ijson>=3.4.0.post0",
     "ipykernel>=7.1.0",
     "langdetect>=1.0.9",
     "malaya>=5.1.1",
     "seqeval>=1.2.2",
     "streamlit>=1.50.0",
-    "torch>=2.9.0",
+    "torch",
+]
+
+[[tool.uv.index]]
+name = "pytorch-cu130"
+url = "https://download.pytorch.org/whl/cu130"
+explicit = true
+
+[tool.uv.sources]
+torch = [
+  { index = "pytorch-cu130", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+]
+torchvision = [
+  { index = "pytorch-cu130", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
 ]
