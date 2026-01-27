@@ -15,7 +15,6 @@ from transformers import (
 # Configuration
 # -----------------------------------------------------------------------------
 DATASET_FILE = 'dataset/finetuning_dataset_malaya_full.jsonl'
-# Path to save/load the processed tokens
 PROCESSED_DATA_PATH = "dataset/tokenized_data_cache_mbert"
 OUTPUT_DIR = "model/malay-english-codeswitch-model-mbert_full"
 MODEL_CHECKPOINT = "bert-base-multilingual-cased" 
@@ -66,30 +65,19 @@ def compute_metrics(p, seqeval, label_list):
     }
 
 def main():
-    # -----------------------------------------------------------------------------
-    # Hardware Optimizations for RTX 40-series (Ada Lovelace)
-    # -----------------------------------------------------------------------------
-    # Enable TF32 for faster matrix multiplications
+    # Hardware Optimizations
     torch.backends.cuda.matmul.allow_tf32 = True
     torch.backends.cudnn.allow_tf32 = True
 
-    # -----------------------------------------------------------------------------
-    # 1 & 2. Load and Tokenize (with Smart Cache)
-    # -----------------------------------------------------------------------------
     tokenizer = AutoTokenizer.from_pretrained(MODEL_CHECKPOINT)
 
     if os.path.exists(PROCESSED_DATA_PATH):
-        print(f"--- Found saved tokens at {PROCESSED_DATA_PATH}. Loading now... ---")
+        print(f"--- Loading saved tokens... ---")
         tokenized_datasets = load_from_disk(PROCESSED_DATA_PATH)
-        print("--- Load complete! ---")
     else:
-        print("--- No saved tokens found. Starting full process... ---")
-        print("--- 1. Loading JSONL Dataset ---")
+        print("--- Tokenizing from scratch... ---")
         raw_dataset = Dataset.from_json(DATASET_FILE)
         dataset_dict = raw_dataset.train_test_split(test_size=0.1, shuffle=True, seed=42)
-
-        print("\n--- 2. Tokenizing and Aligning Labels (Multi-core) ---")
-        
         num_cpus = os.cpu_count()
         tokenized_datasets = dataset_dict.map(
             tokenize_and_align_labels, 
@@ -98,18 +86,15 @@ def main():
             fn_kwargs={"tokenizer": tokenizer},
             remove_columns=dataset_dict["train"].column_names
         )
-        
-        print(f"--- Saving processed tokens to {PROCESSED_DATA_PATH} for next time... ---")
         tokenized_datasets.save_to_disk(PROCESSED_DATA_PATH)
-        print("--- Save complete! ---")
 
-    # -----------------------------------------------------------------------------
-    # 3. Set Up Model and Trainer
-    # -----------------------------------------------------------------------------
+    # --- OPTIONAL: Shrink evaluation set for speed ---
+    # Evaluating 1 million rows takes too long. Let's use 10,000 for quick testing.
+    eval_dataset = tokenized_datasets["test"].shuffle(seed=42).select(range(10000))
+
     print("\n--- 3. Setting Up Model and Trainer ---")
     data_collator = DataCollatorForTokenClassification(tokenizer=tokenizer)
     seqeval = evaluate.load("seqeval")
-
     model = AutoModelForTokenClassification.from_pretrained(
         MODEL_CHECKPOINT, num_labels=len(label_list), id2label=id2label, label2id=label2id
     )
@@ -117,44 +102,46 @@ def main():
     training_args = TrainingArguments(
         output_dir=OUTPUT_DIR,
         learning_rate=2e-5,
-        per_device_train_batch_size=16,   # Increased for RTX 4060 Ti
-        gradient_accumulation_steps=2,    # Full BS 32 throughput
+        per_device_train_batch_size=16,
+        gradient_accumulation_steps=2,
         per_device_eval_batch_size=8,
         num_train_epochs=1,
         weight_decay=0.01,
         eval_strategy="steps",
-        eval_steps=5000,                  # Less frequent eval for speed
+        eval_steps=5000,
         save_steps=5000,
         save_total_limit=2,
         load_best_model_at_end=True,
-        # Performance Tweaks
-        bf16=True,                        # Native mBERT support on 40-series
-        tf32=True,                        # Hardware acceleration
-        optim="adamw_torch_fused",        # Faster optimizer
-        group_by_length=False,             # Minimizes padding overhead
-        dataloader_num_workers=8,         # Faster data feeding
-        push_to_hub=False,
+        # Performance & VRAM Fixes
+        bf16=True,
+        tf32=True,
+        optim="adamw_torch_fused",
+        group_by_length=False,
+        dataloader_num_workers=8,
+        # --- THE FIX: Move evaluation data to RAM instead of GPU ---
+        eval_accumulation_steps=50, 
     )
 
     trainer = Trainer(
         model=model,
         args=training_args,
         train_dataset=tokenized_datasets["train"],
-        eval_dataset=tokenized_datasets["test"],
+        eval_dataset=eval_dataset, # Using the smaller subset
         processing_class=tokenizer,
         data_collator=data_collator,
         compute_metrics=lambda p: compute_metrics(p, seqeval, label_list),
     )
 
     # -----------------------------------------------------------------------------
-    # 4. Train
+    # 4. Train (With Resume)
     # -----------------------------------------------------------------------------
     print("\n--- 4. Starting Fine-Tuning ---")
-    trainer.train()
+    
+    # This will automatically look for 'checkpoint-5000' and continue
+    trainer.train(resume_from_checkpoint=True)
 
     print("\n--- 5. Training Complete ---")
     trainer.save_model(OUTPUT_DIR)
-    print(f"-> Final model saved to: '{OUTPUT_DIR}'")
 
 if __name__ == "__main__":
     main()
