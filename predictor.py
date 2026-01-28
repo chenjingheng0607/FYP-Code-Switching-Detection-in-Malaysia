@@ -4,7 +4,7 @@ import torch
 from transformers import AutoTokenizer, AutoModelForTokenClassification
 
 # --- Configuration ---
-MODEL_PATH = "model/malay-english-codeswitch-model-xlm_500k/checkpoint-40579"
+MODEL_PATH = "model/malay-english-codeswitch-model-mbert_full/checkpoint-307352"
 
 # --- Caching ---
 # Use Streamlit's cache to load the model and tokenizer only once
