@@ -4,7 +4,7 @@ from transformers import AutoTokenizer
 
 # --- 1. Functions and Configs can stay outside ---
 DATASET_IN = "./dataset/finetuning_dataset_malaya_full.jsonl"
-SAVE_PATH = "./dataset/tokenized_data_cache"
+SAVE_PATH = "./dataset/tokenized_data_cache_mbert"
 MODEL_CHECKPOINT = "bert-base-multilingual-cased"
 
 def tokenize_and_align_labels(examples, tokenizer):
