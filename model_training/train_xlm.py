@@ -118,7 +118,7 @@ def main():
         tf32=True,
         optim="adamw_bnb_8bit",             # 8-bit optimizer for VRAM efficiency
         gradient_checkpointing=True,        
-        eval_accumulation_steps=10000,        # Higher value for faster evaluation on Ubuntu
+        eval_accumulation_steps=25000,        # Higher value for faster evaluation on Ubuntu
         dataloader_num_workers=4,           
         group_by_length=False,              
         report_to="none"
