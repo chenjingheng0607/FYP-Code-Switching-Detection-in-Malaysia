@@ -94,25 +94,33 @@ def main():
 
     training_args = TrainingArguments(
         output_dir=OUTPUT_DIR,
-        learning_rate=3e-5, 
-        per_device_train_batch_size=8,      # Lowered for stability, adjusted by accumulation
-        gradient_accumulation_steps=4,      # 8 * 4 = Total Batch Size 32
-        per_device_eval_batch_size=8,
-        num_train_epochs=3,                 # 1 is usually too low for fine-tuning
+        learning_rate=3e-5,
+        num_train_epochs=3,
         weight_decay=0.01,
+        
+        # --- BATCH SIZE & MEMORY ---
+        per_device_train_batch_size=8,      
+        gradient_accumulation_steps=4,      # 8 x 4 = 32 effective batch size
+        per_device_eval_batch_size=8,
+        
+        # --- STRATEGY (Matched for Epoch) ---
+        # This saves your work every 5000 steps (~once an hour)
         eval_strategy="steps",
-        eval_steps=1000,                     # More frequent feedback
-        save_steps=1000,
-        save_total_limit=1,
-        load_best_model_at_end=True,
-        # SPEED & MEMORY OPTIMIZATIONS
-        bf16=True,                          # Best for RTX 4060 Ti
+        eval_steps=10000,
+        save_strategy="steps",
+        save_steps=10000,
+        save_total_limit=2,                 # Keep best + last epoch
+        load_best_model_at_end=True,        # Reload the best version when finished
+        metric_for_best_model="f1",         # Use F1 score to find the "best" model
+
+        # --- HARDWARE & SPEED ---
+        bf16=True,                          # RTX 40-series optimization
         tf32=True,
-        optim="adamw_bnb_8bit",             # 8-bit optimizer saves ~2GB VRAM
-        gradient_checkpointing=True,        # Massive VRAM savings
-        fp16_full_eval=False,               # Keep eval simple to avoid OOM
-        dataloader_num_workers=8,           # 8 is often overkill for one GPU
-        group_by_length=False,               # Faster training (groups similar length sentences)
+        optim="adamw_bnb_8bit",             # 8-bit optimizer for VRAM efficiency
+        gradient_checkpointing=True,        
+        eval_accumulation_steps=10000,        # Higher value for faster evaluation on Ubuntu
+        dataloader_num_workers=4,           
+        group_by_length=False,              
         report_to="none"
     )
 
@@ -126,8 +134,8 @@ def main():
         compute_metrics=lambda p: compute_metrics(p, seqeval, label_list),
     )
 
-    # trainer.train(resume_from_checkpoint=True)
-    trainer.train()
+    trainer.train(resume_from_checkpoint=True)
+    # trainer.train()
     trainer.save_model(OUTPUT_DIR)
 
 if __name__ == "__main__":
