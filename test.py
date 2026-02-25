@@ -1,10 +1,10 @@
-# app.py
+# test.py
 import streamlit as st
-from predictor import predict_code_switching, format_prediction_as_html
+from predictor import predict_code_switching, format_prediction_as_html, load_model_and_tokenizer
 
 # --- Page Configuration ---
 st.set_page_config(
-    page_title="Malay-English Code-Switching Detector",
+    page_title="Malay-English Code-Switching Detector (Dual Model)",
     layout="wide"
 )
 
@@ -26,19 +26,38 @@ st.markdown("""
     font-size: 1.2rem;
     line-height: 2.5;
 }
+.stMetric {
+    background-color: #f8f9fa;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #eee;
+}
 </style>
 """, unsafe_allow_html=True)
 
-# --- Main App UI ---
+# --- Sidebar ---
+st.sidebar.title("Configuration")
+model_option = st.sidebar.selectbox(
+    "Select Model Architecture:",
+    ["mBERT", "XLM-R"],
+    help="Choose between Multilingual BERT or XLM-RoBERTa base models."
+)
 
-st.markdown("<h1 class='main-header'>Malay-English Code-Switching Detector</h1>", unsafe_allow_html=True)
+# Load selected model
+tokenizer, model = load_model_and_tokenizer(model_option)
+
+if not tokenizer or not model:
+    st.error("Model failed to load. Please check the model files.")
+    st.stop()
+
+# --- Main App UI ---
+st.markdown(f"<h1 class='main-header'>Malay-English Code-Switching Detector ({model_option})</h1>", unsafe_allow_html=True)
 
 # Initialize session state to store history
 if 'history' not in st.session_state:
     st.session_state.history = []
 
 # --- Input Form ---
-# Use a form to group the text input and button together
 with st.form("input_form"):
     user_input = st.text_input(
         "Enter a sentence to analyze:",
@@ -50,15 +69,13 @@ with st.form("input_form"):
 # This block now only runs when the "Analyze" button is clicked
 if submitted and user_input:
     # Get predictions from our model
-    predictions = predict_code_switching(user_input)
+    predictions = predict_code_switching(user_input, tokenizer, model)
     
     # Format the predictions as a color-coded HTML string
-    formatted_html = format_prediction_as_html(predictions)
+    formatted_html = format_prediction_as_html(predictions, model_type=model_option)
     
     # Add the result to the top of our history
-    st.session_state.history.insert(0, (user_input, formatted_html))
-    
-    # We don't need to use st.rerun() here, Streamlit handles the update
+    st.session_state.history.insert(0, (user_input, formatted_html, model_option, predictions))
 
 # --- Display History ---
 st.subheader("Analysis History")
@@ -66,11 +83,11 @@ st.subheader("Analysis History")
 if not st.session_state.history:
     st.info("No sentences analyzed yet. Type something above to start!")
 else:
-    for i, (original, result_html) in enumerate(st.session_state.history):
-        with st.expander(f"**Input:** {original}", expanded=(i == 0)):
+    for i, (original, result_html, applied_model, raw_preds) in enumerate(st.session_state.history):
+        with st.expander(f"**[{applied_model}]** Input: {original}", expanded=(i == 0)):
             st.markdown("### 📊 Model Output:")
             st.markdown(f"<div class='result-box'>{result_html}</div>", unsafe_allow_html=True)
             
             st.markdown("---")
             st.markdown("### 🏷️ Raw Labels:")
-            st.json(predict_code_switching(original))
+            st.json(raw_preds)

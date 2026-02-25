@@ -4,46 +4,47 @@ import torch
 from transformers import AutoTokenizer, AutoModelForTokenClassification
 
 # --- Configuration ---
-MODEL_PATH = "model/malay-english-codeswitch-model-mbert_full/checkpoint-307352"
+MODELS = {
+    "mBERT": "model/malay-english-codeswitch-model-mbert_full/checkpoint-307352",
+    "XLM-R": "model/malay-english-codeswitch-model-xlm_full/checkpoint-120000"
+}
 
 # --- Caching ---
-# Use Streamlit's cache to load the model and tokenizer only once
 @st.cache_resource
-def load_model_and_tokenizer():
-    """Load the fine-tuned model and tokenizer."""
-    print("--- Loading model and tokenizer... ---")
+def load_model_and_tokenizer(model_name):
+    """Load the fine-tuned model and tokenizer based on the model name."""
+    model_path = MODELS.get(model_name)
+    if not model_path:
+        st.error(f"Model {model_name} not found in configuration.")
+        return None, None
+        
+    print(f"--- Loading {model_name} model and tokenizer from {model_path}... ---")
     try:
-        tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)
-        model = AutoModelForTokenClassification.from_pretrained(MODEL_PATH)
-        print("--- Model and tokenizer loaded successfully. ---")
+        tokenizer = AutoTokenizer.from_pretrained(model_path)
+        model = AutoModelForTokenClassification.from_pretrained(model_path)
+        print(f"--- {model_name} loaded successfully. ---")
         return tokenizer, model
     except Exception as e:
-        st.error(f"Error loading model: {e}")
-        st.error(f"Please ensure the model path is correct in predictor.py: '{MODEL_PATH}'")
+        st.error(f"Error loading model {model_name}: {e}")
         return None, None
 
-# Load the model right away.
-tokenizer, model = load_model_and_tokenizer()
-
-# Check if the model loaded successfully before proceeding
-if tokenizer and model:
-    id2label = model.config.id2label
-else:
-    # Stop the app if the model can't be loaded
-    st.stop()
-
-
-def predict_code_switching(text):
+def predict_code_switching(text, tokenizer, model):
     """
     Takes a sentence and returns a list of (token, label) pairs.
     """
-    if not text or not isinstance(text, str):
+    if not text or not isinstance(text, str) or tokenizer is None or model is None:
         return []
+
+    id2label = model.config.id2label
 
     # Tokenize the input text
     inputs = tokenizer(text, return_tensors="pt", truncation=True)
     
     # Get model predictions
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    model.to(device)
+    inputs = {k: v.to(device) for k, v in inputs.items()}
+
     with torch.no_grad():
         logits = model(**inputs).logits
     
@@ -52,14 +53,17 @@ def predict_code_switching(text):
     # Pair each token with its predicted label
     results = []
     tokens = tokenizer.convert_ids_to_tokens(inputs["input_ids"][0])
-    for token, prediction_id in zip(tokens, predictions[0].numpy()):
-        if token not in (tokenizer.cls_token, tokenizer.sep_token):
+    # Convert to CPU for numpy/iteration
+    prediction_ids = predictions[0].cpu().numpy()
+
+    for token, prediction_id in zip(tokens, prediction_ids):
+        if token not in (tokenizer.cls_token, tokenizer.sep_token, tokenizer.pad_token, "<s>", "</s>", "<pad>"):
             label = id2label[prediction_id]
             results.append((token, label))
             
     return results
 
-def format_prediction_as_html(predictions):
+def format_prediction_as_html(predictions, model_type="mBERT"):
     """
     Takes a list of (token, label) pairs and formats them as an HTML string
     with color-coded labels, correctly handling and grouping sub-words.
@@ -68,8 +72,8 @@ def format_prediction_as_html(predictions):
         return ""
         
     color_map = {
-        'B-MS': '#FFADAD', 'I-MS': '#FFADAD', # Light Red for Malay
-        'B-EN': '#A0C4FF', 'I-EN': '#A0C4FF', # Light Blue for English
+        'B-MS': '#FFADAD', 'I-MS': '#FFADAD', 'MS': '#FFADAD', # Light Red for Malay
+        'B-EN': '#A0C4FF', 'I-EN': '#A0C4FF', 'EN': '#A0C4FF', # Light Blue for English
         'O': 'transparent'
     }
     
@@ -77,10 +81,28 @@ def format_prediction_as_html(predictions):
     current_word = ""
     current_label = ""
 
+    # SentencePiece prefix used by XLM-R
+    SPIECE_PREFIX = "\u2581" 
+
     for token, label in predictions:
-        # If the token is a sub-word, just append it to the current word string
-        if token.startswith("##"):
-            current_word += token[2:]
+        is_subword = False
+        
+        if model_type == "mBERT":
+            if token.startswith("##"):
+                is_subword = True
+                clean_token = token[2:]
+            else:
+                clean_token = token
+        else: # XLM-R or other SentencePiece models
+            if not token.startswith(SPIECE_PREFIX):
+                is_subword = True
+                clean_token = token
+            else:
+                clean_token = token[1:] # Remove the prefix
+
+        if is_subword:
+            # If the token is a sub-word, just append it to the current word string
+            current_word += clean_token
         else:
             # It's a new word. First, render the previous word group if it exists.
             if current_word:
@@ -88,7 +110,7 @@ def format_prediction_as_html(predictions):
                 final_html += f' <span style="background-color: {color}; padding: 3px 6px; border-radius: 5px;">{current_word}</span>'
             
             # Start the new word group
-            current_word = token
+            current_word = clean_token
             current_label = label
             
     # After the loop, render the very last word group
