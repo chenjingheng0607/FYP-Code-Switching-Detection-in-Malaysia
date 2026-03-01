@@ -45,7 +45,7 @@ To get a local copy up and running, follow these simple steps.
     ```
 
 ### Getting the dataset
-1. Create a folder name it "dataset" in the root folder
+1. Create two folder name it "dataset" and "model" in the root folder
 
 2. Download all the dataset from the file "datasetLink.txt". Place the "dataset" into the folder.
 
