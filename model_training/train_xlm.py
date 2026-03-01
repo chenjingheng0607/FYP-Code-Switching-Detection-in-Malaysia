@@ -106,9 +106,9 @@ def main():
         # --- STRATEGY (Matched for Epoch) ---
         # This saves your work every 5000 steps (~once an hour)
         eval_strategy="steps",
-        eval_steps=10000,
+        eval_steps=50000,
         save_strategy="steps",
-        save_steps=10000,
+        save_steps=50000,
         save_total_limit=2,                 # Keep best + last epoch
         load_best_model_at_end=True,        # Reload the best version when finished
         metric_for_best_model="f1",         # Use F1 score to find the "best" model
