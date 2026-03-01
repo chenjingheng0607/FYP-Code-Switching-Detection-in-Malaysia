@@ -31,3 +31,9 @@ def show_login():
             else:
                 add_user(reg_user, reg_pass)
                 st.success("Account created. Now login!")
+    
+    st.divider()
+
+    if st.button("⬅ Back to Main"):
+        st.session_state.page = "main"
+        st.rerun()
