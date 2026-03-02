@@ -7,7 +7,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 MODEL_PATHS = {
     "mBERT": os.path.join(BASE_DIR, "model", "malay-english-codeswitch-model-mbert_full"),
-    "XLM-R": os.path.join(BASE_DIR, "model", "malay-english-codeswitch-model-xlm_full", "checkpoint-700000"),
+    "XLM-R": os.path.join(BASE_DIR, "model", "malay-english-codeswitch-model-xlm_full", "checkpoint-800000"),
 }
 
 def load_model(name):
