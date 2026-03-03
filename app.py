@@ -15,19 +15,25 @@ st.markdown("""
     overflow-y: auto;
     padding-right: 12px;
     border-right: 2px solid #e0e0e0;
-    background: #fafafa;
+    background: #ffffff;
+    color: #000000;
+}
+.history-box h1, .history-box h2, .history-box h3 {
+    color: #000000 !important;
 }
 .user-bubble {
     background-color:#DCF8C6;
     padding:12px 20px;
     border-radius:14px;
     margin-bottom:10px;
+    color: #000000;
 }
 .assistant-bubble {
     background-color:#F0F0F0;
     padding:12px 20px;
     border-radius:14px;
     margin-bottom:10px;
+    color: #000000;
 }
 .tok-en { color:#e07b00; font-weight:600; }
 .tok-ms { color:#00897b; font-weight:600; }

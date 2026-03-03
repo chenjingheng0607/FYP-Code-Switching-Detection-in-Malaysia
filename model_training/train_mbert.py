@@ -105,7 +105,7 @@ def main():
         per_device_train_batch_size=16,
         gradient_accumulation_steps=2,
         per_device_eval_batch_size=8,
-        num_train_epochs=1,
+        num_train_epochs=3,
         weight_decay=0.01,
         eval_strategy="steps",
         eval_steps=5000,
