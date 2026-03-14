@@ -34,9 +34,7 @@ def preview_jsonl(filename, num_lines=5):
 if __name__ == "__main__":
     # The list of all your dataset files
     files_to_inspect = [
-        "dataset/language_detection_dataset.jsonl",
-        "dataset/train-set.json",
-        "dataset/test-set.json"
+        "dataset/finetuning_dataset_malaya_full.jsonl"
     ]
 
     for file in files_to_inspect:

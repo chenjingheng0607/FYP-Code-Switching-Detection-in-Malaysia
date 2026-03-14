@@ -2,3 +2,4 @@ dataset/
 model/
 __pycache__/
 fyp.db/
+.env

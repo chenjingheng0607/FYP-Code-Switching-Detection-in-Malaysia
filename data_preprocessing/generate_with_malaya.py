@@ -1,109 +1,93 @@
-# generate_with_malaya.py (Corrected)
 import json
-import re
 import os
 import malaya
 import warnings
+import multiprocessing as mp
+from tqdm import tqdm
+from dotenv import load_dotenv
+load_dotenv()
+token = os.getenv("HF_TOKEN")
 
-# Suppress the specific FutureWarning from Malaya's regex
+# Suppress the FutureWarning
 warnings.filterwarnings("ignore", category=FutureWarning, module='malaya.tokenizer')
 
-def load_word_list(filepath):
-    """Loads a word list into a set for fast lookups."""
-    print(f"-> Loading word list from '{filepath}'...")
-    try:
-        with open(filepath, 'r', encoding='utf-8') as f:
-            words = set(line.strip().lower() for line in f if line.strip())
-        print(f"   ...loaded {len(words)} words.")
-        return words
-    except FileNotFoundError:
-        print(f"   ...ERROR: File not found. Please make sure '{filepath}' is in the same folder.")
+# ==========================================
+# Worker Initialization & Logic
+# ==========================================
+# We use global variables inside the workers so the model is loaded 
+# once per CPU core, rather than 10 million times.
+global_word_lang_model = None
+LABEL_MAP = {'O': 0, 'MS': 1, 'EN': 2}
+
+def init_worker():
+    """This function runs once per CPU core when the multiprocessing pool starts."""
+    global global_word_lang_model
+    # Load fasttext and substring rules INSIDE the worker
+    fasttext_model = malaya.language_detection.fasttext(model='mesolitica/fasttext-language-detection-v1')
+    global_word_lang_model = malaya.language_detection.substring_rules(model=fasttext_model)
+
+def process_line(line):
+    """This function processes a single sentence."""
+    sentence = line.strip()
+    if not sentence:
         return None
-
-def create_labeled_example_optimized(sentence, eng_words, ms_words, tagger, tokenizer, label_map):
-    """
-    Optimized to use context.
-    """
-    tokens = tokenizer.tokenize(sentence)
+        
+    tokens = sentence.split()
+    if not tokens:
+        return None
+        
+    # Predict labels word-by-word
+    predicted_labels = global_word_lang_model.predict(tokens)
+    
     ner_tags = []
-    
-    # 1. Let Malaya tag the whole sentence in one pass (Fast and Context-Aware)
-    # Output looks like: [('I', 'EN'), ('makan', 'MS'), ('nasi', 'MS')]
-    tagged_sentence = tagger.predict(sentence)
-    
-    # 2. Iterate through the tokens and format them
-    for word, predicted_lang in tagged_sentence:
-        word_lower = word.lower()
-        
-        # Handle Punctuation/Numbers
-        if not re.search('[a-zA-Z]', word_lower):
-            label = 'O'
+    for pred in predicted_labels:
+        if pred == 'EN':
+            ner_tags.append(LABEL_MAP['EN'])
+        elif pred == 'MS':
+            ner_tags.append(LABEL_MAP['MS'])
         else:
-            # Map Malaya's output to your labels
-            if predicted_lang in ['ENG', 'EN']:
-                label = 'EN'
-            elif predicted_lang in ['MALAY', 'MS']:
-                label = 'MS'
-            else:
-                label = 'O'
-                
-            # Optional: Override the model if you are 100% sure based on your dictionaries
-            # (Only do this if the word is strictly in one dict and not the other)
-            if word_lower in eng_words and word_lower not in ms_words:
-                label = 'EN'
-            elif word_lower in ms_words and word_lower not in eng_words:
-                label = 'MS'
+            ner_tags.append(LABEL_MAP['O'])
+            
+    return json.dumps({"tokens": tokens, "ner_tags": ner_tags}, ensure_ascii=False)
 
-        ner_tags.append(label_map.get(label, 0)) # Default to 'O' (0) if not found
-        
-    return {"tokens": [t[0] for t in tagged_sentence], "ner_tags": ner_tags}
-
-# --- Main script execution ---
+# ==========================================
+# Main Execution
+# ==========================================
 if __name__ == "__main__":
-    
     input_file = 'dataset/cleaned_dataset_full.txt'
     output_file = 'dataset/finetuning_dataset_malaya_full.jsonl'
     
-    LABEL_MAP = {
-        'O': 0, 'MS': 1, 'EN': 2
-    }
-    
-    print("--- 1. Loading Dictionaries ---")
-    # Corrected the filenames to match your output
-    english_words = load_word_list('dataset/words_alpha.txt')
-    malay_words = load_word_list('dataset/malay-text.txt')
-    if not english_words or not malay_words:
+    print("\n--- 1. Checking Input File ---")
+    if not os.path.exists(input_file):
+        print(f"❌ ERROR: Input file '{input_file}' not found.")
         exit()
         
-    print("\n--- 2. Loading Malaya Models ---")
-    print("   (This may download models on the first run)...")
-    lang_detection_model = malaya.language_detection.fasttext(model='mesolitica/fasttext-language-detection-v1')
+    print(f"--- 2. Counting lines in '{input_file}' ---")
+    with open(input_file, 'r', encoding='utf-8') as f:
+        total_lines = sum(1 for _ in f)
     
-    # ***** THE ONLY CHANGE IS ON THIS LINE *****
-    word_tokenizer = malaya.tokenizer.Tokenizer()
-    
-    print("   ...Malaya models loaded successfully.")
-
-    print(f"\n--- 3. Generating fine-tuning data from '{input_file}' ---")
+    # Determine number of CPU cores to use (leaving 1 free so your PC doesn't freeze)
+    # num_cores = max(1, mp.cpu_count() - 1)
+    num_cores = 8
+    print(f"--- 3. Starting Multiprocessing Pool with {num_cores} CPU Cores ---")
     
     processed_count = 0
+    
+    # Open the input and output files
     with open(input_file, 'r', encoding='utf-8') as f_in, \
          open(output_file, 'w', encoding='utf-8') as f_out:
         
-        for line in f_in:
-            sentence = line.strip()
-            if sentence:
-                labeled_example = create_labeled_example(
-                    sentence, english_words, malay_words, lang_detection_model, word_tokenizer, LABEL_MAP
-                )
-                f_out.write(json.dumps(labeled_example, ensure_ascii=False) + '\n')
-                processed_count += 1
+        # Create a multiprocessing Pool
+        # chunksize=5000 means each CPU core grabs 5000 sentences at a time (highly efficient)
+        with mp.Pool(processes=num_cores, initializer=init_worker) as pool:
+            
+            # imap_unordered is faster than normal map because it yields results as soon as they are done
+            results = pool.imap_unordered(process_line, f_in, chunksize=5000)
+            
+            for result_json in tqdm(results, total=total_lines, desc="Processing Tokens"):
+                if result_json:
+                    f_out.write(result_json + '\n')
+                    processed_count += 1
 
-                if processed_count % 100 == 0:
-                    print(f"   ...processed {processed_count} sentences", end='\r')
-
-    print(f"\n\n--- 4. Complete ---")
-    print(f"Auto-labeling finished. Processed {processed_count} sentences.")
-    print(f"   -> Your final fine-tuning dataset is ready: {output_file}")
-    print("\n   Example of the first few lines of the output file:")
-    os.system(f"head -n 3 {output_file}")
+    print("\n--- 4. Complete ---")
+    print(f"✅ Saved {processed_count} correctly labeled token sequences to: {output_file}")
