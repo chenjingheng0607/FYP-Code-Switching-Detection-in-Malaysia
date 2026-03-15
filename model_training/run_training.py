@@ -127,7 +127,7 @@ def train_model(model_key):
     print("--- Compiling Model with Torch Compile ---")
     try:
         # 'reduce-overhead' is great for most training tasks
-        model = torch.compile(model, mode="reduce-overhead")
+        model = torch.compile(model)
     except Exception as e:
         print(f"⚠️ Torch compile failed or not supported: {e}")
     # ----------------------

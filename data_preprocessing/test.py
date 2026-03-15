@@ -1,3 +1,4 @@
-import malaya
-# Access as a dictionary, not a function
-print(malaya.language_detection.available_fasttext)
+import multiprocessing as mp
+
+num_cores = max(1, mp.cpu_count())
+print(num_cores)

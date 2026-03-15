@@ -1,6 +1,7 @@
 import os
 from datasets import Dataset
 from transformers import AutoTokenizer
+import multiprocessing as mp
 
 # --- Configurations ---
 DATASET_IN = "./dataset/finetuning_dataset_malaya_full.jsonl"
@@ -60,11 +61,13 @@ def process_model(model_key):
     else:
         tokenizer = AutoTokenizer.from_pretrained(config['checkpoint'])
 
-    print(f"[{model_key.upper()}] Mapping labels using 8 CPU cores. This will be fast...")
+    num_cores = max(1, mp.cpu_count())
+
+    print(f"[{model_key.upper()}] Mapping labels using {num_cores} CPU cores. This will be fast...")
     tokenized_datasets = dataset_dict.map(
         tokenize_and_align_labels,
         batched=True,
-        num_proc=8,
+        num_proc=num_cores,
         fn_kwargs={"tokenizer": tokenizer},
         remove_columns=dataset_dict["train"].column_names,
         desc=f"Tokenizing {model_key.upper()}"

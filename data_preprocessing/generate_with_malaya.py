@@ -68,7 +68,7 @@ if __name__ == "__main__":
     
     # Determine number of CPU cores to use (leaving 1 free so your PC doesn't freeze)
     # num_cores = max(1, mp.cpu_count() - 1)
-    num_cores = 8
+    num_cores = max(1, mp.cpu_count())
     print(f"--- 3. Starting Multiprocessing Pool with {num_cores} CPU Cores ---")
     
     processed_count = 0
