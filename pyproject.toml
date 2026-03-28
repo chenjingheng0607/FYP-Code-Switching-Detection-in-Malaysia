@@ -19,6 +19,7 @@ dependencies = [
     "pyenchant>=3.3.0",
     "seqeval>=1.2.2",
     "streamlit>=1.50.0",
+    "tensorboard>=2.20.0",
     "torch",
 ]
 
