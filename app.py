@@ -9,7 +9,6 @@ from models import load_model, predict
 LOOKUP_FILE = "dashboard_lookup_5000.jsonl"
 
 
-# ===================== HELPERS =====================
 def normalize_text(text):
     return " ".join(text.strip().lower().split())
 
@@ -24,7 +23,7 @@ def load_ground_truth_lookup():
                     continue
                 item = json.loads(line)
                 text = normalize_text(" ".join(item["tokens"]))
-                labels = item["ner_tags"]   # 如果你的字段不是 ner_tags，就改这里
+                labels = item["ner_tags"]    
                 lookup[text] = labels
     except FileNotFoundError:
         pass
@@ -76,7 +75,6 @@ def format_prediction(tokens, labels):
     return highlighted_html.strip()
 
 
-# ===================== PAGE CONFIG =====================
 st.set_page_config(
     page_title="Code-Switching Detection Dashboard",
     page_icon="💬",
@@ -285,8 +283,16 @@ st.markdown(
         box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
     }
 
-    div[data-testid="stMetricLabel"] {
-        font-weight: 600;
+    div[data-testid="stMetricLabel"],
+    div[data-testid="stMetricLabel"] p {
+        color: #18212f !important;
+        font-weight: 600 !important;
+    }
+
+    div[data-testid="stMetricValue"],
+    div[data-testid="stMetricValue"] p {
+        color: #18212f !important;
+        font-size: 1.45rem !important;
     }
 
     div[data-testid="stMetricValue"] {
@@ -330,69 +336,69 @@ st.markdown(
 
     html, body, [class*="css"]  {
     color: #18212f !important;
-}
+    }
 
-/* ===== 修复 Metrics 颜色 ===== */
+    /* ===== 修复 Metrics 颜色 ===== */
 
-div[data-testid="stMetricLabel"] {
-    color: #18212f !important;
-    font-weight: 600 !important;
-}
+    div[data-testid="stMetricLabel"] {
+        color: #18212f !important;
+        font-weight: 600 !important;
+    }
 
-div[data-testid="stMetricValue"] {
-    color: #18212f !important;
-    font-size: 1.45rem !important;
-}
+    div[data-testid="stMetricValue"] {
+        color: #18212f !important;
+        font-size: 1.45rem !important;
+    }
 
-div[data-testid="stMetricDelta"] {
-    color: #667085 !important;
-}
+    div[data-testid="stMetricDelta"] {
+        color: #667085 !important;
+    }
 
-/* ===== 修复 Selectbox label ===== */
+    /* ===== 修复 Selectbox label ===== */
 
-div[data-testid="stSelectbox"] label {
-    color: #18212f !important;
-    opacity: 1 !important;
-}
+    div[data-testid="stSelectbox"] label {
+        color: #18212f !important;
+        opacity: 1 !important;
+    }
 
-/* ===== 修复 Tabs（Login/Register） ===== */
+    /* ===== 修复 Tabs（Login/Register） ===== */
 
-.stTabs [data-baseweb="tab"] {
-    color: #18212f !important;
-    opacity: 1 !important;
-    font-weight: 600 !important;
-}
+    .stTabs [data-baseweb="tab"] {
+        color: #18212f !important;
+        opacity: 1 !important;
+        font-weight: 600 !important;
+    }
 
-/* 当前选中的 tab */
+    /* 当前选中的 tab */
 
-.stTabs [aria-selected="true"] {
-    color: #1d4ed8 !important;
-}
+    .stTabs [aria-selected="true"] {
+        color: #1d4ed8 !important;
+    }
 
-/* ===== 修复 TextInput label ===== */
+    /* ===== 修复 TextInput label ===== */
 
-.stTextInput label {
-    color: #18212f !important;
-}
+    .stTextInput label {
+        color: #18212f !important;
+    }
 
-/* ===== 修复 输入框文字 ===== */
+    /* ===== 修复 输入框文字 ===== */
 
-div[data-baseweb="input"] input {
-    color: #18212f !important;
-    background-color: #ffffff !important;
-}
+    div[data-baseweb="input"] input {
+        color: #18212f !important;
+        background-color: #ffffff !important;
+    }
 
-/* ===== 修复 Button 文字 ===== */
+    /* ===== 修复 Button 文字 ===== */
 
-button {
-    color: white !important;
-}
+    button {
+        color: white !important;
+    }
 
-/* ===== 修复 Login 页面标题 ===== */
+    /* ===== 修复 Login 页面标题 ===== */
 
-h1 {
-    color: #18212f !important;
-}
+    h1 {
+        color: #18212f !important;
+    }
 
     </style>
     """,
@@ -400,7 +406,6 @@ h1 {
 )
 
 
-# ===================== SESSION STATE =====================
 if "page" not in st.session_state:
     st.session_state.page = "main"
 
@@ -428,13 +433,11 @@ if "last_prediction_html" not in st.session_state:
 ground_truth_lookup = load_ground_truth_lookup()
 
 
-# ===================== LOGIN PAGE =====================
 if st.session_state.page == "login":
     show_login()
     st.stop()
 
 
-# ===================== MODEL LOAD =====================
 model_options = ["MT5", "mBERT", "XLM-R"]
 if (
     "tokenizer" not in st.session_state
@@ -447,7 +450,6 @@ if (
     st.session_state.current_model = "MT5"
 
 
-# ===================== HERO =====================
 st.markdown(
     f"""
     <div class="hero-card">
@@ -470,7 +472,6 @@ st.markdown(
 col_history, col_center, col_ctrl = st.columns([2.1, 5.7, 2.2], gap="large")
 
 
-# ===================== LEFT PANEL =====================
 with col_history:
 
     st.markdown('<div class="panel-title">User Session</div>', unsafe_allow_html=True)
@@ -547,7 +548,6 @@ with col_history:
     st.markdown("</div></div>", unsafe_allow_html=True)
 
 
-# ===================== CENTER PANEL =====================
 with col_center:
     st.markdown(
         """
@@ -578,7 +578,6 @@ with col_center:
     user_input = st.chat_input("Enter a sentence for language tagging...")
 
 
-# ===================== PREDICTION LOGIC =====================
 if user_input:
     result = predict(
         st.session_state.current_model,
@@ -587,7 +586,6 @@ if user_input:
         user_input
     )
 
-    # 支持 3 个值或 4 个值的 predict 返回
     if len(result) == 4:
         tokens, labels, benchmark_metrics, _ = result
     else:
@@ -618,7 +616,6 @@ if user_input:
     st.rerun()
 
 
-# ===================== RIGHT PANEL =====================
 with col_ctrl:
 
     st.markdown('<div class="panel-title">Model Control Panel</div>', unsafe_allow_html=True)
