@@ -327,6 +327,73 @@ st.markdown(
     div[data-testid="stSelectbox"] label {
         font-weight: 600;
     }
+
+    html, body, [class*="css"]  {
+    color: #18212f !important;
+}
+
+/* ===== 修复 Metrics 颜色 ===== */
+
+div[data-testid="stMetricLabel"] {
+    color: #18212f !important;
+    font-weight: 600 !important;
+}
+
+div[data-testid="stMetricValue"] {
+    color: #18212f !important;
+    font-size: 1.45rem !important;
+}
+
+div[data-testid="stMetricDelta"] {
+    color: #667085 !important;
+}
+
+/* ===== 修复 Selectbox label ===== */
+
+div[data-testid="stSelectbox"] label {
+    color: #18212f !important;
+    opacity: 1 !important;
+}
+
+/* ===== 修复 Tabs（Login/Register） ===== */
+
+.stTabs [data-baseweb="tab"] {
+    color: #18212f !important;
+    opacity: 1 !important;
+    font-weight: 600 !important;
+}
+
+/* 当前选中的 tab */
+
+.stTabs [aria-selected="true"] {
+    color: #1d4ed8 !important;
+}
+
+/* ===== 修复 TextInput label ===== */
+
+.stTextInput label {
+    color: #18212f !important;
+}
+
+/* ===== 修复 输入框文字 ===== */
+
+div[data-baseweb="input"] input {
+    color: #18212f !important;
+    background-color: #ffffff !important;
+}
+
+/* ===== 修复 Button 文字 ===== */
+
+button {
+    color: white !important;
+}
+
+/* ===== 修复 Login 页面标题 ===== */
+
+h1 {
+    color: #18212f !important;
+}
+
     </style>
     """,
     unsafe_allow_html=True,
