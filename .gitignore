@@ -3,3 +3,4 @@ model/
 __pycache__/
 fyp.db/
 .env
+test.ipynb

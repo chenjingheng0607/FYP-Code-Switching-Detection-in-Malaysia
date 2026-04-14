@@ -12,9 +12,9 @@ import os
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 MODEL_PATHS = {
-    "mBERT": os.path.join(BASE_DIR, "saved_models", "mbert_model"),
-    "XLM-R": os.path.join(BASE_DIR, "saved_models", "xlmr_model"),
-    "MT5": os.path.join(BASE_DIR, "saved_models", "mt5_model"),
+    "mBERT": os.path.join(BASE_DIR, "model", "malay-english-codeswitch-model-mbert_full"),
+    "XLM-R": os.path.join(BASE_DIR, "model", "malay-english-codeswitch-model-xlm_full"),
+    "MT5": os.path.join(BASE_DIR, "model", "mt5_model"),
 }
 
 
