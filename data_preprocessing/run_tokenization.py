@@ -50,6 +50,11 @@ def process_model(model_key):
         print(f"❌ ERROR: Cannot find {DATASET_IN}. Did Malaya finish running?")
         return
         
+    if os.path.getsize(DATASET_IN) == 0:
+        print(f"❌ ERROR: {DATASET_IN} is empty (0 bytes).")
+        print(f"💡 Run 'python data_preprocessing/generate_with_malaya.py' first to generate labels.")
+        return
+        
     raw_dataset = Dataset.from_json(DATASET_IN)
     dataset_dict = raw_dataset.train_test_split(test_size=0.1, shuffle=True, seed=42)
 
