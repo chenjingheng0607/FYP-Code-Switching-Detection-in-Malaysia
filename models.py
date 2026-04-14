@@ -8,7 +8,6 @@ from transformers import (
 import torch
 import os
 
-# 获取当前脚本绝对路径
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 MODEL_PATHS = {
@@ -69,9 +68,7 @@ def load_model(name):
 
 
 def confidence_to_metrics(avg_prob):
-    """
-    将平均置信度映射到四个 dashboard 指标
-    """
+   
     avg_prob = max(0.0, min(float(avg_prob), 1.0))
 
     precision = max(0.0, min(avg_prob * 0.985, 1.0))
