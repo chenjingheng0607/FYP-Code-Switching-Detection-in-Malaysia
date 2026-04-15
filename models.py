@@ -8,6 +8,9 @@ from transformers import (
 import torch
 import os
 
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+print(f"Using device: {DEVICE}")
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 MODEL_PATHS = {
@@ -63,6 +66,7 @@ def load_model(name):
             local_files_only=True
         )
 
+    model.to(DEVICE)
     model.eval()
     return tokenizer, model
 
@@ -93,7 +97,7 @@ def predict(model_name, tokenizer, model, text):
     # ===== MT5 =====
     if model_name == "MT5":
         input_text = "task: tag " + text
-        inputs = tokenizer(input_text, return_tensors="pt").to(model.device)
+        inputs = tokenizer(input_text, return_tensors="pt").to(DEVICE)
 
         with torch.no_grad():
             outputs = model.generate(
@@ -145,7 +149,7 @@ def predict(model_name, tokenizer, model, text):
     # ===== mBERT / XLM-R =====
     else:
         tokens = text.split()
-        inputs = tokenizer(tokens, return_tensors="pt", is_split_into_words=True)
+        inputs = tokenizer(tokens, return_tensors="pt", is_split_into_words=True).to(DEVICE)
 
         with torch.no_grad():
             outputs = model(**inputs)
