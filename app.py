@@ -414,14 +414,14 @@ if "chat_history" not in st.session_state:
 
 if "metrics" not in st.session_state:
     st.session_state.metrics = {
-        "Accuracy": 0.90,
-        "Precision": 0.89,
-        "Recall": 0.88,
-        "F1": 0.88,
+        "Accuracy": 0.00,
+        "Precision": 0.00,
+        "Recall": 0.00,
+        "F1": 0.00,
     }
 
 if "metric_source" not in st.session_state:
-    st.session_state.metric_source = "Default benchmark"
+    st.session_state.metric_source = "No input yet"
 
 if "current_model" not in st.session_state:
     st.session_state.current_model = "MT5"
