@@ -8,9 +8,6 @@ from transformers import (
 import torch
 import os
 
-DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-print(f"Using device: {DEVICE}")
-
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 MODEL_PATHS = {
@@ -66,7 +63,6 @@ def load_model(name):
             local_files_only=True
         )
 
-    model.to(DEVICE)
     model.eval()
     return tokenizer, model
 
@@ -97,7 +93,7 @@ def predict(model_name, tokenizer, model, text):
     # ===== MT5 =====
     if model_name == "MT5":
         input_text = "task: tag " + text
-        inputs = tokenizer(input_text, return_tensors="pt").to(DEVICE)
+        inputs = tokenizer(input_text, return_tensors="pt").to(model.device)
 
         with torch.no_grad():
             outputs = model.generate(
@@ -125,7 +121,7 @@ def predict(model_name, tokenizer, model, text):
         decoded = tokenizer.decode(outputs.sequences[0], skip_special_tokens=True)
         tokens, labels = [], []
         items = decoded.split(" | ")
-        seen = set()
+        
 
         for item in items:
             if "->" in item:
@@ -137,10 +133,10 @@ def predict(model_name, tokenizer, model, text):
                     if token.lower() == "tag" or token == "":
                         continue
 
-                    if token not in seen:
-                        tokens.append(token)
-                        labels.append(2 if "ENG" in label else 1 if "MAL" in label else 0)
-                        seen.add(token)
+
+                    tokens.append(token)
+                    labels.append(2 if "ENG" in label else 1 if "MAL" in label else 0)
+                        
                 except Exception:
                     continue
 
@@ -149,7 +145,7 @@ def predict(model_name, tokenizer, model, text):
     # ===== mBERT / XLM-R =====
     else:
         tokens = text.split()
-        inputs = tokenizer(tokens, return_tensors="pt", is_split_into_words=True).to(DEVICE)
+        inputs = tokenizer(tokens, return_tensors="pt", is_split_into_words=True)
 
         with torch.no_grad():
             outputs = model(**inputs)
