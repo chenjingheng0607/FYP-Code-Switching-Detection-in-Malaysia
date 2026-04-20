@@ -1,17 +1,29 @@
 import json
 import streamlit as st
+import re
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 
 from db import save_chat, get_conn
 from login import show_login
 from models import load_model, predict
 
+
 LOOKUP_FILE = "dashboard_lookup_5000.jsonl"
 
 
 def normalize_text(text):
-    return " ".join(text.strip().lower().split())
+    text = text.strip().lower()
 
+    # remove HTML tags
+    text = re.sub(r"<.*?>", "", text)
+
+    # remove special characters and digits
+    text = re.sub(r"[^a-zA-Z\s]", "", text)
+
+    # remove extra spaces
+    text = " ".join(text.split())
+
+    return text
 
 @st.cache_resource
 def load_ground_truth_lookup():
@@ -577,13 +589,15 @@ with col_center:
 
     user_input = st.chat_input("Enter a sentence for language tagging...")
 
-
 if user_input:
+
+    clean_input = normalize_text(user_input)
+
     result = predict(
         st.session_state.current_model,
         st.session_state.tokenizer,
         st.session_state.model,
-        user_input
+        clean_input
     )
 
     if len(result) == 4:
